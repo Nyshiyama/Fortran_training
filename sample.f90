@@ -12,19 +12,21 @@ program main
     delta_t=1d-4
 
     ! 初期値
-    u  =1d0
-    uxp=2d0
-    uxm=2d0
-    uyp=2d0
-    uym=2d0
+    u=1d0
+    print*, 'uxp, uxm, uyp, uym'
+    read*, uxp, uxm, uyp, uym
 
     rx=delta_t/delta_x**2 ! 陽解法式参照
     ry=delta_t/delta_y**2 ! 陽解法式参照
 
-    print*, 'rx, ry', rx, ry ! rx, ry   2.4999999999999996E-003   1.1111111111111111E-003
+    open(10,file='open_ex.txt',form='formatted',status='unknown')
+    write(10,*) 'rx, ry', rx, ry ! rx, ry   2.4999999999999996E-003   1.1111111111111111E-003
+    close(10)
 
     u_new=rx*(uxp+uxm)+ry*(uyp+uym)+(1d0-2d0*(rx+ry))*u ! 陽解法式参照
 
-    print*, 'u_new', u_new ! u_new   1.0072222222222222
+    open(10,file='open_ex.txt',form='formatted',status='unknown',position='append')
+    write(10,*) 'u_new', u_new ! u_new   1.0072222222222222
+    close(10)
 
 end program main
