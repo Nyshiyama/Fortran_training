@@ -19,16 +19,25 @@ program main
     ry=delta_t/delta_y**2 ! 陽解法式参照
     print*, 'rx=',rx,'ry=',ry ! rx=   9.0000000000000011E-002 ry=   3.9999999999999994E-002
 
-    i=2
-    j=2
-    xp=i+1
-    xm=i-1
-    yp=j+1
-    ym=j-1
-    u_new(i,j)=rx*(u(xp,j)+u(xm,j))+ry*(u(i,yp)+u(i,ym))+(1d0-2d0*(rx+ry))*u(i,j) ! 陽解法式参照
+    do j=1,ny
+        do i=1,nx
+            xp=i+1
+            if(i==nx) xp=1
+            xm=i-1
+            if(i==1) xm=nx
+            yp=j+1
+            if(j==ny) yp=1
+            ym=j-1
+            if(j==1) ym=ny
+            ! if文を使わずにxp等は記述できる（ヒント：mod関数，答えは最初のサンプルコード）
+
+            u_new(i,j)=rx*(u(xp,j)+u(xm,j))+ry*(u(i,yp)+u(i,ym))+(1d0-2d0*(rx+ry))*u(i,j) ! 陽解法式参照
+        enddo
+    enddo
 
     open(10,file='open_ex.txt',form='formatted',status='unknown')
-    write(10,*) 'u_new', u_new(:,:) !(2,2)成分のみの計算なのでそれ以外にゼロが入っている保証はない→初期化問題
+    write(10,*) nx, ny, 'u_new' ! ヘッダー：ファイル冒頭に格子点数等を記録しておくと参照するときに便利
+    write(10,*) u_new(:,:) ! 先頭の文字列は参照するときに邪魔なので削除（printのときは出力値を明確化するために付けていた）
     close(10)
 
 end program main
