@@ -1,15 +1,10 @@
 program main
     implicit none
-    double precision delta_x, delta_y ! 格子幅
-    double precision delta_t  ! 時間刻み
+    double precision, parameter :: delta_x=0.2d0, delta_y=0.3d0 ! 格子幅
+    double precision, parameter :: delta_t=1d-4  ! 時間刻み
     double precision rx, ry
     double precision u, u_new
     double precision uxp, uxm, uyp, uym
-
-    ! パラメータ
-    delta_x=0.2d0
-    delta_y=0.3d0
-    delta_t=1d-4
 
     ! 初期値
     u=1d0
