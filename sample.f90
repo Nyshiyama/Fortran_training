@@ -10,7 +10,6 @@ program main
     integer         , dimension(nx,ny) :: Iobs ! ParaView
     integer i, j
     integer xp, xm, yp, ym
-    character cnx*8, cny*8, cnz*8, cntot*16, cdx*12, cdy*12, buffer*80 ! ParaView
 
     delta_x=xmax/dble(nx-1)
     delta_y=ymax/dble(ny-1)
@@ -21,44 +20,15 @@ program main
 
     ! 障害物の設定
     obs(:,:)=.true.
+    Iobs(:,:)=1 ! 可視化用
     do j=2,ny-1
         do i=2,nx-1
             obs(i,j)=.false.
+            Iobs(i,j)=0
         enddo
     enddo
 
-    ! 障害物データを整数型に変換
-    do j=1,ny
-        do i=1,nx
-            if(obs(i,j))then
-                Iobs(i,j)=1
-            else
-                Iobs(i,j)=0
-            endif
-        enddo
-    enddo
-
-    write(cnx,'(i8)') nx
-    write(cny,'(i8)') ny
-    write(cnz,'(i8)') 1
-    write(cntot,'(i16)') nx*ny
-    write(cdx,'(f12.10)') delta_x
-    write(cdy,'(f12.10)') delta_y
-
-    ! ParaViewフォーマット
-    open(20, file='obs.vtk', form='unformatted', access='stream', status='unknown', convert='BIG_ENDIAN')
-    buffer = '# vtk DataFile Version 3.0'//char(10) ; write(20) trim(buffer)
-    buffer = 'contour.vtk'//char(10)                ; write(20) trim(buffer)
-    buffer = 'BINARY'//char(10)                     ; write(20) trim(buffer)
-    buffer = 'DATASET STRUCTURED_POINTS'//char(10)  ; write(20) trim(buffer)
-    buffer = 'DIMENSIONS '//cnx//cny//cnz//char(10) ; write(20) trim(buffer)
-    buffer = 'ORIGIN 0.0 0.0 0.0'//char(10)         ; write(20) trim(buffer)
-    buffer = 'SPACING '//cdx//cdy//' 1.0'//char(10) ; write(20) trim(buffer)
-    buffer = 'POINT_DATA'//cntot//char(10)          ; write(20) trim(buffer)
-    buffer = 'SCALARS obs int'//char(10)            ; write(20) trim(buffer)
-    buffer = 'LOOKUP_TABLE default'//char(10)       ; write(20) trim(buffer)
-    write(20) ((Iobs(i,j),i=1,nx),j=1,ny)
-    close(20)
+    call Output_for_ParaView('obs',real(Iobs),nx,ny)
 
     ! uの初期条件
     do j=1,ny
@@ -84,19 +54,37 @@ program main
         enddo
     enddo
 
-    ! ParaViewフォーマット
-    open(20, file='u.vtk', form='unformatted', access='stream', status='unknown', convert='BIG_ENDIAN')
-    buffer = '# vtk DataFile Version 3.0'//char(10) ; write(20) trim(buffer)
-    buffer = 'contour.vtk'//char(10)                ; write(20) trim(buffer)
-    buffer = 'BINARY'//char(10)                     ; write(20) trim(buffer)
-    buffer = 'DATASET STRUCTURED_POINTS'//char(10)  ; write(20) trim(buffer)
-    buffer = 'DIMENSIONS '//cnx//cny//cnz//char(10) ; write(20) trim(buffer)
-    buffer = 'ORIGIN 0.0 0.0 0.0'//char(10)         ; write(20) trim(buffer)
-    buffer = 'SPACING '//cdx//cdy//' 1.0'//char(10) ; write(20) trim(buffer)
-    buffer = 'POINT_DATA'//cntot//char(10)          ; write(20) trim(buffer)
-    buffer = 'SCALARS u float'//char(10)            ; write(20) trim(buffer)
-    buffer = 'LOOKUP_TABLE default'//char(10)       ; write(20) trim(buffer)
-    write(20) ((real(u_new(i,j)),i=1,nx),j=1,ny)
-    close(20)
+    call Output_for_ParaView('u',real(u_new),nx,ny)
 
 end program main
+
+subroutine Output_for_ParaView(filename,array,nx,ny)
+    implicit none
+    real, dimension(nx,ny), intent(in) :: array
+    integer, intent(in) :: nx, ny
+    character(*), intent(in) :: filename ! 文字列長は引数依存
+    integer i, j
+    character cnx*8, cny*8, cnz*8, cntot*16, cdx*12, cdy*12, buffer*80
+
+    write(cnx,'(i8)') nx
+    write(cny,'(i8)') ny
+    write(cnz,'(i8)') 1
+    write(cntot,'(i16)') nx*ny
+    write(cdx,'(f12.10)') delta_x
+    write(cdy,'(f12.10)') delta_y
+
+    ! ParaViewフォーマット
+    open(20, file=filename//'.vtk', form='unformatted', access='stream', status='unknown', convert='BIG_ENDIAN')
+    buffer = '# vtk DataFile Version 3.0'//char(10)   ; write(20) trim(buffer)
+    buffer = 'contour.vtk'//char(10)                  ; write(20) trim(buffer)
+    buffer = 'BINARY'//char(10)                       ; write(20) trim(buffer)
+    buffer = 'DATASET STRUCTURED_POINTS'//char(10)    ; write(20) trim(buffer)
+    buffer = 'DIMENSIONS '//cnx//cny//cnz//char(10)   ; write(20) trim(buffer)
+    buffer = 'ORIGIN 0.0 0.0 0.0'//char(10)           ; write(20) trim(buffer)
+    buffer = 'SPACING '//cdx//cdy//' 1.0'//char(10)   ; write(20) trim(buffer)
+    buffer = 'POINT_DATA'//cntot//char(10)            ; write(20) trim(buffer)
+    buffer = 'SCALARS '//filename//' float'//char(10) ; write(20) trim(buffer)
+    buffer = 'LOOKUP_TABLE default'//char(10)         ; write(20) trim(buffer)
+    write(20) ((array(i,j),i=1,nx),j=1,ny)
+    close(20)
+end subroutine Output_for_ParaView
