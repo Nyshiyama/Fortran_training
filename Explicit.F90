@@ -1,21 +1,26 @@
 program main
     implicit none
-    double precision, parameter :: delta_x=0.2d0, delta_y=0.3d0 ! 格子幅
-    double precision, parameter :: delta_t=0.001d0  ! 時間刻み
-    integer         , parameter :: nx=30, ny=20  ! 格子点数
+    double precision, parameter :: xmax=1d0, ymax=1d0   ! 解析領域の大きさ
+    double precision, parameter :: delta_t=1d-4  ! 時間刻み
+    integer         , parameter :: nx=31, ny=21  ! 格子点数
     integer         , parameter :: tmax=1000 ! タイムステップ数
     integer         , parameter :: period=10 ! 解析結果の出力周期
 
     double precision, dimension(nx,ny) :: u, u_new
     logical         , dimension(nx,ny) :: obs
     integer         , dimension(nx,ny) :: Iobs ! ParaView
+    double precision delta_x, delta_y ! 格子幅
     double precision rx, ry
     integer i, j
     integer xp, xm, yp, ym
     integer t
 
+    delta_x=xmax/dble(nx-1)
+    delta_y=ymax/dble(ny-1)
+
     rx=delta_t/delta_x**2 ! 陽解法式参照
     ry=delta_t/delta_y**2 ! 陽解法式参照
+    print*, 'rx=',rx,'ry=',ry ! rx=   9.0000000000000011E-002 ry=   3.9999999999999994E-002
 
     ! 障害物の設定
     obs(:,:)=.true.
@@ -74,13 +79,15 @@ subroutine Output_for_ParaView(t,filename,array,nx,ny)
     integer, intent(in) :: t
     character(*), intent(in) :: filename ! 文字列長は引数依存
     integer i, j
-    character ct*8, cnx*8, cny*8, cnz*8, cntot*16, buffer*80
+    character ct*8, cnx*8, cny*8, cnz*8, cntot*16, cdx*12, cdy*12, buffer*80
 
     write(ct,'(i8.8)') t ! 00000000-99999999
     write(cnx,'(i8)') nx
     write(cny,'(i8)') ny
     write(cnz,'(i8)') 1
     write(cntot,'(i16)') nx*ny
+    write(cdx,'(f12.10)') delta_x
+    write(cdy,'(f12.10)') delta_y
 
     ! ParaViewフォーマット
     open(20, file=filename//ct//'.vtk', form='unformatted', access='stream', status='unknown', convert='BIG_ENDIAN')
@@ -89,8 +96,8 @@ subroutine Output_for_ParaView(t,filename,array,nx,ny)
     buffer = 'BINARY'//char(10)                       ; write(20) trim(buffer)
     buffer = 'DATASET STRUCTURED_POINTS'//char(10)    ; write(20) trim(buffer)
     buffer = 'DIMENSIONS '//cnx//cny//cnz//char(10)   ; write(20) trim(buffer)
-    buffer = 'ORIGIN 1.0 1.0 1.0'//char(10)           ; write(20) trim(buffer)
-    buffer = 'SPACING 1.0 1.0 1.0'//char(10)          ; write(20) trim(buffer)
+    buffer = 'ORIGIN 0.0 0.0 0.0'//char(10)           ; write(20) trim(buffer)
+    buffer = 'SPACING '//cdx//cdy//' 1.0'//char(10)   ; write(20) trim(buffer)
     buffer = 'POINT_DATA'//cntot//char(10)            ; write(20) trim(buffer)
     buffer = 'SCALARS '//filename//' float'//char(10) ; write(20) trim(buffer)
     buffer = 'LOOKUP_TABLE default'//char(10)         ; write(20) trim(buffer)
