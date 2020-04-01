@@ -1,0 +1,13 @@
+a.out
+*.txt
+hello_ex.f90
+shisoku_ex.f90
+shisokubugfixed_ex.f90
+open_ex.f90
+array_ex.f90
+array_ex2.f90
+do_ex.f90
+logical_ex.f90
+*.vtk
+*.pptx
+Fortran養成講座について.md
